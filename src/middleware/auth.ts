@@ -19,11 +19,12 @@ export const authenticate = (req:AuthRequest,
 
     }
 
-    const token = authHeader.split("")[1]
+    const token = authHeader.split(" ")[1]
 
     try{
         const payload = jwt.verify(token , JWT_SECRET)
         req.user = payload
+        console.log(" Auth Successful. User:", req.user);
         next()
 
     }catch(error){
