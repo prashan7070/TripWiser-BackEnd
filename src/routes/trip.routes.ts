@@ -1,7 +1,7 @@
 import express from 'express';
 import { tripController } from '../controllers/trip.controller';
 import { authenticate } from '../middleware/auth';
-import { upload } from '../config/cloudinary'; // Import the Multer Config you already have
+import { upload } from '../config/cloudinary'; 
 import { Role } from '../models/User';
 import { requireRole } from '../middleware/role';
 

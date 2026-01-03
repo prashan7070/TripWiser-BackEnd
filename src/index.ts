@@ -27,8 +27,8 @@ app.use(
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/user", userRoutes)
 app.use("/api/v1/trip", tripRoutes)
-app.use("/api/v1/weather", weatherRoutes) // New
-app.use("/api/v1/map", mapRoutes)         // New
+app.use("/api/v1/weather", weatherRoutes) 
+app.use("/api/v1/map", mapRoutes)         
 app.use("/api/v1/hotel", hotelRoutes) 
 
 mongoose
