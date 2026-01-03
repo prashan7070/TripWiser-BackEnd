@@ -9,6 +9,7 @@ import weatherRoutes from './routes/weather.routes';
 import mapRoutes from './routes/map.routes';        
 import hotelRoutes from './routes/hotel.routes'; 
 import userRoutes from './routes/user.routes';
+import aiRoutes from "./routes/ai.routes"
 dotenv.config()
 
 const SERVER_PORT = process.env.SERVER_PORT
@@ -31,6 +32,7 @@ app.use("/api/v1/trip", tripRoutes)
 app.use("/api/v1/weather", weatherRoutes) 
 app.use("/api/v1/map", mapRoutes)         
 app.use("/api/v1/hotel", hotelRoutes) 
+app.use('/api/v1/ai', aiRoutes); 
 
 mongoose
   .connect(MONGO_URI)

@@ -26,3 +26,6 @@ export const uploadToCloudinary = async (fileBuffer: Buffer, folder: string) => 
 };
 
 export default cloudinary
+
+
+

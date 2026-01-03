@@ -13,6 +13,8 @@ export const tripController = {
   createTrip: async (req: MulterRequest, res: Response) => {
     try {
       
+      console.log("File Received", req.file);
+
       let { title, startDate, endDate, budget, travelStyle, stops, notes, isAiGenerated } = req.body;
 
       
