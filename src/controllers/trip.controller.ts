@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Trip from '../models/Trip';
+import { uploadToCloudinary } from '../config/cloudinary';
 
 // Multer file
 interface MulterRequest extends Request {
@@ -23,10 +24,32 @@ export const tripController = {
       }
 
       
-      let coverImage = "";
+    //   let coverImage = "";
+    //   if (req.file) {
+    //     coverImage = req.file.path; 
+    //   }
+
+
+    //   let coverImage = "";
+
+      let coverImage = req.body.coverImage || "";
+      
       if (req.file) {
-        coverImage = req.file.path; 
+        console.log("File detected, uploading to Cloudinary...");
+        try {
+        
+          const result = await uploadToCloudinary(req.file.buffer, 'tripwiser-trips');
+          
+          coverImage = result.secure_url;
+          console.log(" Upload Success:", coverImage);
+        } catch (uploadError) {
+          console.error("Cloudinary Upload Error:", uploadError);
+        
+        }
+      } else {
+        console.log(" No file received in request");
       }
+   
 
       
       const newTrip = new Trip({
@@ -38,7 +61,7 @@ export const tripController = {
         travelStyle,
         stops,
         notes,
-        coverImage, // Cloudinary URL
+        coverImage, 
         isAiGenerated: isAiGenerated === 'true' || isAiGenerated === true,
         status: 'active'
       });

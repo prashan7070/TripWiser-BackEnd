@@ -12,6 +12,7 @@ export interface IUser extends Document{
     email:string
     password:string
     role:Role
+    avatar?: string;
 }
 
 
@@ -39,6 +40,11 @@ const userSchema = new Schema<IUser>({
     type: String, 
     enum: Object.values(Role), 
     default: Role.USER 
+    },
+
+    avatar: {
+        type: String,
+        default: "" 
     }
 })
 
