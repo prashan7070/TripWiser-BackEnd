@@ -6,6 +6,9 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import axios from 'axios';
 dotenv.config();
+import { sendEmail } from '../utils/email';
+import crypto from 'crypto';
+import Mailgen from 'mailgen';
 
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET as string;
 
@@ -180,8 +183,125 @@ export const googleLogin = async (req: Request, res: Response) => {
       console.error("Google Auth Error:", error.response?.data || error.message);
       res.status(401).json({ message: "Invalid Google Token" });
     }
-  
-};
+
+  };
+
+
+    
+  export const changePassword = async (req: Request, res: Response) => {
+    try {
+      const { oldPassword, newPassword } = req.body;
+      const userId = (req as any).user.sub; 
+
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      // Verify Old Password
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) return res.status(400).json({ message: "Incorrect old password" });
+
+      // Hash New Password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+      await user.save();
+
+      res.status(200).json({ message: "Password updated successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  };
+
+
+
+
+  export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Generate Token
+    const resetToken = crypto.randomBytes(20).toString('hex');
+
+    // Hash and Save to DB
+    user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.resetPasswordExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 Mins
+    await user.save();
+
+    // Create Reset Link
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+    // Design Email using Mailgen
+    const mailGenerator = new Mailgen({
+      theme: 'default',
+      product: {
+        name: 'TripWiser',
+        link: process.env.CLIENT_URL || 'http://localhost:5173'
+      }
+    });
+
+    const emailContent = {
+      body: {
+        name: user.firstname,
+        intro: 'You have received this email because a password reset request for your account was received.',
+        action: {
+          instructions: 'Click the button below to reset your password:',
+          button: {
+            color: '#dc2626', 
+            text: 'Reset your password',
+            link: resetUrl
+          }
+        },
+        outro: 'If you did not request a password reset, no further action is required on your part.'
+      }
+    };
+
+    const emailBody = mailGenerator.generate(emailContent);
+
+    // 5. Send Email
+    await sendEmail(user.email, "Password Reset Request", emailBody);
+
+    res.status(200).json({ message: "Email sent successfully" });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Email could not be sent" });
+  }
+  };
+
+
+
+  export const resetPassword = async (req: Request, res: Response) => {
+    try {
+      const { token } = req.params;
+      const { password } = req.body;
+
+      // Hash the token from URL to compare with DB
+      const resetPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
+
+      const user = await User.findOne({
+        resetPasswordToken,
+        resetPasswordExpires: { $gt: Date.now() } // Check if not expired
+      });
+
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or expired token" });
+      }
+
+      // Update Password
+      user.password = await bcrypt.hash(password, 10);
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+
+      res.status(200).json({ message: "Password reset successful" });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  }
 
 
 

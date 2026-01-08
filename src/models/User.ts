@@ -13,6 +13,8 @@ export interface IUser extends Document{
     password:string
     role:Role
     avatar?: string;
+    resetPasswordToken?: string;
+    resetPasswordExpires?: Date;
 }
 
 
@@ -45,7 +47,10 @@ const userSchema = new Schema<IUser>({
     avatar: {
         type: String,
         default: "" 
-    }
+    },
+
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date }
 })
 
 

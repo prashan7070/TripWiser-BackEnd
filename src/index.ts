@@ -13,6 +13,7 @@ import userRoutes from './routes/user.routes';
 import aiRoutes from "./routes/ai.routes"
 import attractionRoutes from './routes/attraction.routes';
 
+
 dotenv.config()
 
 const SERVER_PORT = process.env.SERVER_PORT || 5000
