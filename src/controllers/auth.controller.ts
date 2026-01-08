@@ -77,7 +77,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // 3. Generate Tokens
+    // Generate Tokens
     const accessToken = signAccessToken(existingUser);
     const refreshToken = signRefreshToken(existingUser);
 
@@ -112,7 +112,6 @@ export const handleRefreshToken = async (req: Request, res: Response) => {
 
     const payload: any = jwt.verify(token, JWT_REFRESH_SECRET);
     
-    // payload.sub contains the User ID
     const user = await User.findById(payload.sub);
     
     if (!user) {
@@ -261,7 +260,7 @@ export const googleLogin = async (req: Request, res: Response) => {
 
     const emailBody = mailGenerator.generate(emailContent);
 
-    // 5. Send Email
+    // Send Email
     await sendEmail(user.email, "Password Reset Request", emailBody);
 
     res.status(200).json({ message: "Email sent successfully" });
