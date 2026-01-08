@@ -16,11 +16,11 @@ export const weatherController = {
       const diffTime = targetDate.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      // Helper to identify rain/storm codes from OpenWeather
+      //identify rain/storm codes from OpenWeather
       const isBadWeather = (id: number) => id >= 200 && id <= 531;
 
       
-      // Date is within 5 days (Use Real API)
+      // Date is within 5 days
       
       if (diffDays <= 5 && diffDays >= -1) {
         // Use 5-Day Forecast API
@@ -33,8 +33,8 @@ export const weatherController = {
           }
         });
 
-        // The API returns data every 3 hours. We try to find the entry for 12:00 PM on the target date.
-        // If not found (e.g. today), we take the first available item.
+        // The API returns data every 3 hours. find the entry for 12:00 PM on the target date.
+        // If not found take the first available item.
         const targetDateString = targetDate.toISOString().split('T')[0];
         
         const forecast = response.data.list.find((item: any) => 
