@@ -3,6 +3,9 @@ import cors from "cors"
 import helmet from "helmet"
 import dotenv from "dotenv"
 import mongoose from "mongoose"
+import dns from "dns"
+
+dns.setDefaultResultOrder("ipv4first")
 
 // Routes Imports
 import authRoutes from './routes/auth.routes';
@@ -67,11 +70,17 @@ app.use(errorHandler);
 mongoose
   .connect(MONGO_URI)
   .then(() => {
-    console.log("✅ DB connected")
+    console.log("✅ DB connected successfully to Cloud Atlas")
   })
   .catch((err) => {
-    console.error(` DB connection fail: ${err}`)
-    process.exit(1)
+    console.warn(`⚠️ Primary DB connection failed: ${err.message || err}`);
+    console.log("🔄 Attempting fallback to local MongoDB...");
+    mongoose
+      .connect("mongodb://127.0.0.1:27017/tripWiser")
+      .then(() => console.log("✅ DB connected to local MongoDB"))
+      .catch((localErr) => {
+        console.error(`❌ Local DB connection fail: ${localErr.message || localErr}`);
+      });
   })
 
 app.listen(SERVER_PORT, () => {
