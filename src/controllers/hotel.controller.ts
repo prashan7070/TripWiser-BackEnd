@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
+import { getCache, setCache } from '../utils/cache';
 
 const GEOAPIFY_KEY = process.env.GEOAPIFY_KEY;
 
@@ -12,7 +13,12 @@ export const hotelController = {
         return res.status(400).json({ message: "Latitude and Longitude required" });
       }
 
-      
+      const cacheKey = `hotels_${lat}_${lng}`;
+      const cachedHotels = getCache(cacheKey);
+      if (cachedHotels) {
+        return res.status(200).json(cachedHotels);
+      }
+
       const url = `https://api.geoapify.com/v2/places`;
 
       const response = await axios.get(url, {
@@ -24,16 +30,14 @@ export const hotelController = {
         }
       });
 
-      
       const hotels = response.data.features.map((place: any) => {
         const p = place.properties;
         return {
           name: p.name || p.address_line1 || "Unnamed Hotel", 
           hotelId: place.properties.place_id,
-          // Calculate distance manually or just return the address line
           address: p.address_line2 || p.city, 
           distance: p.distance ? `${p.distance} m` : "Nearby",
-          rating: p.rank ? p.rank.popularity : 0, // 'popularity' rank
+          rating: p.rank ? p.rank.popularity : 0,
           geoCode: {
             latitude: p.lat,
             longitude: p.lon
@@ -41,6 +45,7 @@ export const hotelController = {
         };
       });
 
+      setCache(cacheKey, hotels, 3600);
       res.status(200).json(hotels);
 
     } catch (error) {

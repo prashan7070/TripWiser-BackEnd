@@ -63,19 +63,22 @@ export const aiController = {
       
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          responseMimeType: "application/json"
+        }
       });
 
      
       let text = response.text || "";
 
+      // Sanitize potential code block markers if present
+      text = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
      
       const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error("AI response did not contain valid JSON");
-      }
+      const rawJson = jsonMatch ? jsonMatch[0] : text;
       
-      const tripPlan = JSON.parse(jsonMatch[0]);
+      const tripPlan = JSON.parse(rawJson);
       tripPlan.isAiGenerated = true;
 
       res.status(200).json(tripPlan);

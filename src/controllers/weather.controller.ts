@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
+import { getCache, setCache } from '../utils/cache';
 
 export const weatherController = {
   getWeather: async (req: Request, res: Response) => {
@@ -8,6 +9,12 @@ export const weatherController = {
 
       if (!lat || !lng) {
         return res.status(400).json({ message: "Coordinates required" });
+      }
+
+      const cacheKey = `weather_${lat}_${lng}_${date || 'today'}`;
+      const cachedData = getCache(cacheKey);
+      if (cachedData) {
+        return res.status(200).json(cachedData);
       }
 
       //Calculate how far away the trip is
@@ -43,7 +50,7 @@ export const weatherController = {
 
         const weatherId = forecast.weather[0].id;
 
-        res.status(200).json({
+        const resultData = {
           temp: Math.round(forecast.main.temp),
           condition: forecast.weather[0].main,
           description: forecast.weather[0].description,
@@ -52,7 +59,9 @@ export const weatherController = {
           windSpeed: forecast.wind.speed,
           dataType: "LIVE_ACCURATE",
           warning: isBadWeather(weatherId) ? `⚠️ Rain predicted for ${targetDateString}.` : null
-        });
+        };
+        setCache(cacheKey, resultData, 1800);
+        res.status(200).json(resultData);
       } 
       
       
@@ -83,7 +92,7 @@ export const weatherController = {
           }
         }
 
-        res.status(200).json({
+        const resultData = {
           temp: 29, 
           condition: condition,
           description: "seasonal average",
@@ -92,7 +101,9 @@ export const weatherController = {
           windSpeed: 10,
           dataType: "SEASONAL_AVERAGE",
           warning: warning
-        });
+        };
+        setCache(cacheKey, resultData, 1800);
+        res.status(200).json(resultData);
       }
 
     } catch (error) {
