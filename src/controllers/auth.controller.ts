@@ -25,7 +25,8 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid role" });
     }
 
-    const existingUser = await User.findOne({ email });
+    const cleanEmail = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: cleanEmail });
     if (existingUser) {
       return res.status(400).json({ message: "Email already registered" });
     }
@@ -34,9 +35,9 @@ export const register = async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new User({
-      firstname,
-      lastname,
-      email,
+      firstname: firstname.trim(),
+      lastname: lastname.trim(),
+      email: cleanEmail,
       password: hashedPassword,
       role: role, 
     });
@@ -60,21 +61,25 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
-    console.log("Login attempt:", req.body.email);
-
     const { email, password } = req.body;
 
-    //Find User
-    const existingUser = await User.findOne({ email });
-
-    if (!existingUser) {
-      return res.status(401).json({ message: "Invalid credentials" });
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
     }
 
-   
+    const cleanEmail = email.toLowerCase().trim();
+    console.log("Login attempt:", cleanEmail);
+
+    //Find User
+    const existingUser = await User.findOne({ email: cleanEmail });
+
+    if (!existingUser) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
     const isMatch = await bcrypt.compare(password, existingUser.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Invalid email or password" });
     }
 
     // Generate Tokens
